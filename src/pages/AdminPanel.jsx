@@ -49,7 +49,14 @@ const AdminPanel = ({ user, onLogout, token }) => {
             await axios.put(`https://user-management-back-production-6bfb.up.railway.app/users/${endpoint}`, { userIds: selectedIds }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setUsers(users.map(user => selectedIds.includes(user.id) ? { ...user, status: endpoint === 'block' ? 'blocked' : 'active' } : user));
+
+            setUsers(prevUsers =>
+                prevUsers.map(user =>
+                    selectedIds.includes(user.id)
+                        ? { ...user, status: endpoint === 'block' ? 'blocked' : 'active' }
+                        : user
+                )
+            );
         } catch (err) {
             console.error('Error updating users:', err);
         }
