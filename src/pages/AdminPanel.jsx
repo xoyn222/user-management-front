@@ -31,7 +31,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
     };
 
     const toggleSelectAll = () => {
-        const selectableUsers = users.filter(u => u.id !== user.id); // Исключаем самого себя
+        const selectableUsers = users.filter(u => u.id !== user.id);
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
         const newSelectedUsers = newSelectAll ? Object.fromEntries(selectableUsers.map(u => [u.id, true])) : {};
@@ -39,12 +39,12 @@ const AdminPanel = ({ user, onLogout, token }) => {
     };
 
     const toggleSelectUser = (userId) => {
-        if (userId === user.id) return; // Нельзя выбрать самого себя
+        if (userId === user.id) return;
 
         setSelectedUsers(prev => {
             const newSelectedUsers = { ...prev };
             newSelectedUsers[userId] ? delete newSelectedUsers[userId] : newSelectedUsers[userId] = true;
-            setSelectAll(Object.keys(newSelectedUsers).length === users.length - 1); // Исключаем самого себя
+            setSelectAll(Object.keys(newSelectedUsers).length === users.length - 1);
             return newSelectedUsers;
         });
     };
@@ -55,7 +55,6 @@ const AdminPanel = ({ user, onLogout, token }) => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
 
-        // Фильтруем пользователей, чтобы нельзя было забанить уже заблокированных
         if (endpoint === 'block') {
             const alreadyBlockedUsers = users.filter(u => selectedIds.includes(u.id) && u.status === 'blocked');
             if (alreadyBlockedUsers.length > 0) {
