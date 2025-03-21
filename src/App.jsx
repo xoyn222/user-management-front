@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminPanel from './pages/AdminPanel';
@@ -10,20 +10,29 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const checkAuth = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) throw new Error('No token found');
+            const token = localStorage.getItem('token');
+            console.log('Checking token:', token);
 
+            if (!token) {
+                setIsAuthenticated(false);
+                setCurrentUser(null);
+                setLoading(false);
+                return;
+            }
+
+            try {
                 const response = await axios.get('https://user-management-back-production-6bfb.up.railway.app/users/me', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-
+                console.log('User authenticated:', response.data);
                 setIsAuthenticated(true);
                 setCurrentUser(response.data);
             } catch {
+                console.log('Authentication failed');
                 setIsAuthenticated(false);
                 setCurrentUser(null);
                 localStorage.removeItem('token');
@@ -42,16 +51,18 @@ const App = () => {
         localStorage.setItem('token', token);
         setIsAuthenticated(true);
         setCurrentUser(user);
+        navigate('/admin');
     };
-
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setCurrentUser(null);
+        navigate('/login');
     };
 
     const ProtectedRoute = ({ children }) => {
+        console.log('Auth status:', isAuthenticated, 'Loading:', loading);
         if (loading) return <div>Loading...</div>;
         return isAuthenticated ? children : <Navigate to="/login" />;
     };
@@ -60,7 +71,7 @@ const App = () => {
         <Router>
             <div className="app-container">
                 <Routes>
-                    <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+                    <Route path="/login" element={<LoginPage onLogin={handleLogin} isAuthenticated={isAuthenticated} />} />
                     <Route path="/register" element={<RegisterPage onLogin={handleLogin} isAuthenticated={isAuthenticated} />} />
                     <Route path="/admin" element={
                         <ProtectedRoute>
