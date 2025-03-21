@@ -7,12 +7,19 @@ const AdminPanel = ({ user, onLogout, token }) => {
     const [selectedUsers, setSelectedUsers] = useState({});
     const [selectAll, setSelectAll] = useState(false);
 
+    const fetchUsers = async () => {
+        try {
+            const res = await axios.get('https://user-management-back-production-6bfb.up.railway.app/users', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUsers(res.data);
+        } catch (err) {
+            console.error('Error fetching users:', err);
+        }
+    };
+
     useEffect(() => {
-        axios.get('https://user-management-back-production-6bfb.up.railway.app/users', {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(res => setUsers(res.data))
-            .catch(err => console.error('Error fetching users:', err));
+        fetchUsers();
     }, [token]);
 
     if (!user || user.status === 'blocked') {
@@ -50,13 +57,9 @@ const AdminPanel = ({ user, onLogout, token }) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setUsers(prevUsers =>
-                prevUsers.map(user =>
-                    selectedIds.includes(user.id)
-                        ? { ...user, status: endpoint === 'block' ? 'blocked' : 'active' }
-                        : user
-                )
-            );
+            await fetchUsers();
+            setSelectedUsers({});
+            setSelectAll(false);
         } catch (err) {
             console.error('Error updating users:', err);
         }
