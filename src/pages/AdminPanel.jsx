@@ -31,17 +31,20 @@ const AdminPanel = ({ user, onLogout, token }) => {
     };
 
     const toggleSelectAll = () => {
+        const selectableUsers = users.filter(u => u.id !== user.id); // Исключаем самого себя
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
-        const newSelectedUsers = newSelectAll ? Object.fromEntries(users.map(u => [u.id, true])) : {};
+        const newSelectedUsers = newSelectAll ? Object.fromEntries(selectableUsers.map(u => [u.id, true])) : {};
         setSelectedUsers(newSelectedUsers);
     };
 
     const toggleSelectUser = (userId) => {
+        if (userId === user.id) return; // Нельзя выбрать самого себя
+
         setSelectedUsers(prev => {
             const newSelectedUsers = { ...prev };
             newSelectedUsers[userId] ? delete newSelectedUsers[userId] : newSelectedUsers[userId] = true;
-            setSelectAll(Object.keys(newSelectedUsers).length === users.length);
+            setSelectAll(Object.keys(newSelectedUsers).length === users.length - 1); // Исключаем самого себя
             return newSelectedUsers;
         });
     };
@@ -51,6 +54,15 @@ const AdminPanel = ({ user, onLogout, token }) => {
     const handleUserAction = async (endpoint) => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
+
+        // Фильтруем пользователей, чтобы нельзя было забанить уже заблокированных
+        if (endpoint === 'block') {
+            const alreadyBlockedUsers = users.filter(u => selectedIds.includes(u.id) && u.status === 'blocked');
+            if (alreadyBlockedUsers.length > 0) {
+                alert('Некоторые пользователи уже заблокированы.');
+                return;
+            }
+        }
 
         try {
             await axios.put(`https://user-management-back-production-6bfb.up.railway.app/users/${endpoint}`, { userIds: selectedIds }, {
@@ -80,8 +92,12 @@ const AdminPanel = ({ user, onLogout, token }) => {
             <div className="container py-4">
                 <div className="card mb-4">
                     <div className="card-body d-flex gap-2">
-                        <button className="btn btn-danger" onClick={() => handleUserAction('block')} disabled={getSelectedUserIds().length === 0}>Block</button>
-                        <button className="btn btn-success" onClick={() => handleUserAction('unblock')} disabled={getSelectedUserIds().length === 0}>Unblock</button>
+                        <button className="btn btn-danger" onClick={() => handleUserAction('block')} disabled={getSelectedUserIds().length === 0}>
+                            Block
+                        </button>
+                        <button className="btn btn-success" onClick={() => handleUserAction('unblock')} disabled={getSelectedUserIds().length === 0}>
+                            Unblock
+                        </button>
                     </div>
                 </div>
 
@@ -103,14 +119,18 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                 {users.map(userItem => (
                                     <tr key={userItem.id} className={userItem.status === 'blocked' ? 'user-blocked' : ''}>
                                         <td className="ps-3">
-                                            <input className="form-check-input" type="checkbox"
-                                                   checked={!!selectedUsers[userItem.id]}
-                                                   onChange={() => toggleSelectUser(userItem.id)}
-                                                   disabled={userItem.id === user.id}/>
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={!!selectedUsers[userItem.id]}
+                                                onChange={() => toggleSelectUser(userItem.id)}
+                                                disabled={userItem.id === user.id} // Нельзя выбрать самого себя
+                                            />
                                         </td>
                                         <td>{userItem.name}</td>
                                         <td>{userItem.email}</td>
-                                        <td><span className={`status-badge ${userItem.status}`}>{userItem.status}</span>
+                                        <td>
+                                            <span className={`status-badge ${userItem.status}`}>{userItem.status}</span>
                                         </td>
                                     </tr>
                                 ))}
