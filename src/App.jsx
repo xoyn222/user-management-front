@@ -10,7 +10,7 @@ const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+    const navigate = useNavigate(); //
 
     useEffect(() => {
         const checkAuth = async () => {
