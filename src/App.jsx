@@ -36,10 +36,14 @@ const App = () => {
     }, []);
 
     const handleLogin = (token, user) => {
+        console.log('Saving token:', token);
+        console.log('User:', user);
+
         localStorage.setItem('token', token);
         setIsAuthenticated(true);
         setCurrentUser(user);
     };
+
 
     const handleLogout = () => {
         localStorage.removeItem('token');
