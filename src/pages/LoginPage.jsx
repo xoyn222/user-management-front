@@ -17,7 +17,8 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
 
         try {
             const response = await axios.post('https://user-management-back-production-6bfb.up.railway.app/login', { email, password });
-            onLogin(response.data);
+            const { token, user } = response.data;
+            onLogin(token, user);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid email or password');
         }
