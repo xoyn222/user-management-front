@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,7 +7,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
     const [selectedUsers, setSelectedUsers] = useState({});
     const [selectAll, setSelectAll] = useState(false);
 
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         try {
             const res = await axios.get('https://user-management-back-production-6bfb.up.railway.app/users', {
                 headers: { Authorization: `Bearer ${token}` }
@@ -16,11 +16,11 @@ const AdminPanel = ({ user, onLogout, token }) => {
         } catch (err) {
             console.error('Error fetching users:', err);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
         fetchUsers();
-    }, [token]);
+    }, [fetchUsers]);
 
     if (!user || user.status === 'blocked') {
         return <Navigate to="/login" />;
