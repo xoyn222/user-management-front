@@ -57,7 +57,7 @@ const App = () => {
             <div className="app-container">
                 <Routes>
                     <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-                    <Route path="/register" element={<RegisterPage onLogin={handleLogin} />} />
+                    <Route path="/register" element={<RegisterPage onLogin={handleLogin} isAuthenticated={isAuthenticated} />} />
                     <Route path="/admin" element={
                         <ProtectedRoute>
                             <AdminPanel user={currentUser} onLogout={handleLogout} token={localStorage.getItem('token')} />
