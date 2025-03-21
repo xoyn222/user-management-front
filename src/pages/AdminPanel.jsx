@@ -58,7 +58,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
         if (endpoint === 'block') {
             const alreadyBlockedUsers = users.filter(u => selectedIds.includes(u.id) && u.status === 'blocked');
             if (alreadyBlockedUsers.length > 0) {
-                alert('Некоторые пользователи уже заблокированы.');
+                alert('Some users have already been blocked');
                 return;
             }
         }
@@ -73,6 +73,28 @@ const AdminPanel = ({ user, onLogout, token }) => {
             setSelectAll(false);
         } catch (err) {
             console.error('Error updating users:', err);
+        }
+    };
+
+    const handleDeleteUsers = async () => {
+        const selectedIds = getSelectedUserIds();
+        if (selectedIds.length === 0) return;
+
+        if (!window.confirm("Are you sure you want to delete the selected users?")) {
+            return;
+        }
+
+        try {
+            await axios.delete('https://user-management-back-production-6bfb.up.railway.app/users/delete', {
+                data: { userIds: selectedIds },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            await fetchUsers();
+            setSelectedUsers({});
+            setSelectAll(false);
+        } catch (err) {
+            console.error('Error deleting users:', err);
         }
     };
 
@@ -97,6 +119,9 @@ const AdminPanel = ({ user, onLogout, token }) => {
                         <button className="btn btn-success" onClick={() => handleUserAction('unblock')} disabled={getSelectedUserIds().length === 0}>
                             Unblock
                         </button>
+                        <button className="btn btn-warning" onClick={handleDeleteUsers} disabled={getSelectedUserIds().length === 0}>
+                            Delete
+                        </button>
                     </div>
                 </div>
 
@@ -112,6 +137,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Status</th>
+                                    <th>Last Login</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -123,7 +149,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                                 type="checkbox"
                                                 checked={!!selectedUsers[userItem.id]}
                                                 onChange={() => toggleSelectUser(userItem.id)}
-                                                disabled={userItem.id === user.id} // Нельзя выбрать самого себя
+                                                disabled={userItem.id === user.id}
                                             />
                                         </td>
                                         <td>{userItem.name}</td>
@@ -131,9 +157,10 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                         <td>
                                             <span className={`status-badge ${userItem.status}`}>{userItem.status}</span>
                                         </td>
+                                        <td>{userItem.lastLogin ? new Date(userItem.lastLogin).toLocaleString() : 'Never'}</td>
                                     </tr>
                                 ))}
-                                {users.length === 0 && <tr><td colSpan="4" className="text-center py-4 text-muted">No users found</td></tr>}
+                                {users.length === 0 && <tr><td colSpan="5" className="text-center py-4 text-muted">No users found</td></tr>}
                                 </tbody>
                             </table>
                         </div>
