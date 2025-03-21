@@ -93,11 +93,15 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                 {users.map(userItem => (
                                     <tr key={userItem.id} className={userItem.status === 'blocked' ? 'user-blocked' : ''}>
                                         <td className="ps-3">
-                                            <input className="form-check-input" type="checkbox" checked={!!selectedUsers[userItem.id]} onChange={() => toggleSelectUser(userItem.id)} disabled={userItem.id === user.id} />
+                                            <input className="form-check-input" type="checkbox"
+                                                   checked={!!selectedUsers[userItem.id]}
+                                                   onChange={() => toggleSelectUser(userItem.id)}
+                                                   disabled={userItem.id === user.id}/>
                                         </td>
                                         <td>{userItem.name}</td>
                                         <td>{userItem.email}</td>
-                                        <td><span className={`status-badge ${userItem.status}`}>{userItem.status}</span></td>
+                                        <td><span className={`status-badge ${userItem.status}`}>{userItem.status}</span>
+                                        </td>
                                     </tr>
                                 ))}
                                 {users.length === 0 && <tr><td colSpan="4" className="text-center py-4 text-muted">No users found</td></tr>}
