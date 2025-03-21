@@ -79,11 +79,6 @@ const AdminPanel = ({ user, onLogout, token }) => {
     const handleDeleteUsers = async () => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
-
-        if (!window.confirm("Are you sure you want to delete the selected users?")) {
-            return;
-        }
-
         try {
             await axios.delete('https://user-management-back-production-6bfb.up.railway.app/users/delete', {
                 data: { userIds: selectedIds },
