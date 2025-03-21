@@ -23,7 +23,7 @@ const App = () => {
 
                 setIsAuthenticated(true);
                 setCurrentUser(response.data);
-            } catch (error) {
+            } catch {
                 setIsAuthenticated(false);
                 setCurrentUser(null);
                 localStorage.removeItem('token');
