@@ -22,7 +22,7 @@ const AppContent = () => {
                 });
 
                 setIsAuthenticated(true);
-                setCurrentUser(response.data);
+                setCurrentUser(response.data); //
             } catch {
                 setIsAuthenticated(false);
                 setCurrentUser(null);
