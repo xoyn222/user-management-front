@@ -23,7 +23,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
         fetchUsers();
     }, [fetchUsers]);
 
-    if (!user || user.status === 'blocked' || redirectToRegister) {
+    if (redirectToRegister) {
         return <Navigate to="/register" />;
     }
 
@@ -40,11 +40,10 @@ const AdminPanel = ({ user, onLogout, token }) => {
     };
 
     const toggleSelectUser = (userId) => {
-        if (userId === user.id) return;
         setSelectedUsers(prev => {
             const newSelectedUsers = { ...prev };
             newSelectedUsers[userId] ? delete newSelectedUsers[userId] : newSelectedUsers[userId] = true;
-            setSelectAll(Object.keys(newSelectedUsers).length === users.length - 1);
+            setSelectAll(Object.keys(newSelectedUsers).length === users.length);
             return newSelectedUsers;
         });
     };
@@ -55,15 +54,14 @@ const AdminPanel = ({ user, onLogout, token }) => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
 
-        if (selectedIds.includes(user.id)) {
-            setRedirectToRegister(true);
-            return;
-        }
-
         try {
             await axios.put(`https://user-management-back-production-6bfb.up.railway.app/users/${endpoint}`, { userIds: selectedIds }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            if (selectedIds.includes(user.id) && endpoint === 'block') {
+                setRedirectToRegister(true);
+            }
             await fetchUsers();
             setSelectedUsers({});
             setSelectAll(false);
@@ -76,16 +74,15 @@ const AdminPanel = ({ user, onLogout, token }) => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
 
-        if (selectedIds.includes(user.id)) {
-            setRedirectToRegister(true);
-            return;
-        }
-
         try {
             await axios.delete('https://user-management-back-production-6bfb.up.railway.app/users/delete', {
                 data: { userIds: selectedIds },
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            if (selectedIds.includes(user.id)) {
+                setRedirectToRegister(true);
+            }
             await fetchUsers();
             setSelectedUsers({});
             setSelectAll(false);
@@ -145,7 +142,6 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                                 type="checkbox"
                                                 checked={!!selectedUsers[userItem.id]}
                                                 onChange={() => toggleSelectUser(userItem.id)}
-                                                disabled={userItem.id === user.id}
                                             />
                                         </td>
                                         <td>{userItem.name}</td>
