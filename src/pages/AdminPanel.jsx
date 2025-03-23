@@ -6,7 +6,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
     const [users, setUsers] = useState([]);
     const [selectedUsers, setSelectedUsers] = useState({});
     const [selectAll, setSelectAll] = useState(false);
-    const [selfBanned, setSelfBanned] = useState(false);
+    const [redirectToRegister, setRedirectToRegister] = useState(false);
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -23,7 +23,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
         fetchUsers();
     }, [fetchUsers]);
 
-    if (selfBanned || !user || user.status === 'blocked') {
+    if (!user || user.status === 'blocked' || redirectToRegister) {
         return <Navigate to="/register" />;
     }
 
@@ -32,17 +32,19 @@ const AdminPanel = ({ user, onLogout, token }) => {
     };
 
     const toggleSelectAll = () => {
+        const selectableUsers = users.filter(u => u.id !== user.id);
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
-        const newSelectedUsers = newSelectAll ? Object.fromEntries(users.map(u => [u.id, true])) : {};
+        const newSelectedUsers = newSelectAll ? Object.fromEntries(selectableUsers.map(u => [u.id, true])) : {};
         setSelectedUsers(newSelectedUsers);
     };
 
     const toggleSelectUser = (userId) => {
+        if (userId === user.id) return;
         setSelectedUsers(prev => {
             const newSelectedUsers = { ...prev };
             newSelectedUsers[userId] ? delete newSelectedUsers[userId] : newSelectedUsers[userId] = true;
-            setSelectAll(Object.keys(newSelectedUsers).length === users.length);
+            setSelectAll(Object.keys(newSelectedUsers).length === users.length - 1);
             return newSelectedUsers;
         });
     };
@@ -53,21 +55,42 @@ const AdminPanel = ({ user, onLogout, token }) => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
 
+        if (selectedIds.includes(user.id)) {
+            setRedirectToRegister(true);
+            return;
+        }
+
         try {
             await axios.put(`https://user-management-back-production-6bfb.up.railway.app/users/${endpoint}`, { userIds: selectedIds }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
-            if (selectedIds.includes(user.id.toString())) {
-                setSelfBanned(true);
-                onLogout();
-            } else {
-                await fetchUsers();
-                setSelectedUsers({});
-                setSelectAll(false);
-            }
+            await fetchUsers();
+            setSelectedUsers({});
+            setSelectAll(false);
         } catch (err) {
             console.error('Error updating users:', err);
+        }
+    };
+
+    const handleDeleteUsers = async () => {
+        const selectedIds = getSelectedUserIds();
+        if (selectedIds.length === 0) return;
+
+        if (selectedIds.includes(user.id)) {
+            setRedirectToRegister(true);
+            return;
+        }
+
+        try {
+            await axios.delete('https://user-management-back-production-6bfb.up.railway.app/users/delete', {
+                data: { userIds: selectedIds },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            await fetchUsers();
+            setSelectedUsers({});
+            setSelectAll(false);
+        } catch (err) {
+            console.error('Error deleting users:', err);
         }
     };
 
@@ -92,6 +115,9 @@ const AdminPanel = ({ user, onLogout, token }) => {
                         <button className="btn btn-success" onClick={() => handleUserAction('unblock')} disabled={getSelectedUserIds().length === 0}>
                             Unblock
                         </button>
+                        <button className="btn btn-warning" onClick={handleDeleteUsers} disabled={getSelectedUserIds().length === 0}>
+                            Delete
+                        </button>
                     </div>
                 </div>
 
@@ -112,13 +138,14 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                 </thead>
                                 <tbody>
                                 {users.map(userItem => (
-                                    <tr key={userItem.id}>
+                                    <tr key={userItem.id} className={userItem.status === 'blocked' ? 'user-blocked' : ''}>
                                         <td className="ps-3">
                                             <input
                                                 className="form-check-input"
                                                 type="checkbox"
                                                 checked={!!selectedUsers[userItem.id]}
                                                 onChange={() => toggleSelectUser(userItem.id)}
+                                                disabled={userItem.id === user.id}
                                             />
                                         </td>
                                         <td>{userItem.name}</td>
