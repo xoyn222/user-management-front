@@ -32,10 +32,9 @@ const AdminPanel = ({ user, onLogout, token }) => {
     };
 
     const toggleSelectAll = () => {
-        const selectableUsers = users.filter(u => u.id !== user.id);
         const newSelectAll = !selectAll;
         setSelectAll(newSelectAll);
-        const newSelectedUsers = newSelectAll ? Object.fromEntries(selectableUsers.map(u => [u.id, true])) : {};
+        const newSelectedUsers = newSelectAll ? Object.fromEntries(users.map(u => [u.id, true])) : {};
         setSelectedUsers(newSelectedUsers);
     };
 
@@ -59,9 +58,12 @@ const AdminPanel = ({ user, onLogout, token }) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (selectedIds.includes(user.id) && endpoint === 'block') {
+            if (selectedIds.includes(user.id.toString()) && endpoint === 'block') {
+                handleLogout();
                 setRedirectToRegister(true);
+                return;
             }
+
             await fetchUsers();
             setSelectedUsers({});
             setSelectAll(false);
@@ -80,9 +82,12 @@ const AdminPanel = ({ user, onLogout, token }) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (selectedIds.includes(user.id)) {
+            if (selectedIds.includes(user.id.toString())) {
+                handleLogout();
                 setRedirectToRegister(true);
+                return;
             }
+
             await fetchUsers();
             setSelectedUsers({});
             setSelectAll(false);
@@ -144,7 +149,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
                                                 onChange={() => toggleSelectUser(userItem.id)}
                                             />
                                         </td>
-                                        <td>{userItem.name}</td>
+                                        <td>{userItem.name}{userItem.id === user.id ? ' (You)' : ''}</td>
                                         <td>{userItem.email}</td>
                                         <td>
                                             <span className={`status-badge ${userItem.status}`}>{userItem.status}</span>
