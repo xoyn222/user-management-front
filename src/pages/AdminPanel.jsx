@@ -57,7 +57,6 @@ const AdminPanel = ({ user, onLogout, token }) => {
             await axios.put(`https://user-management-back-production-6bfb.up.railway.app/users/${endpoint}`, { userIds: selectedIds }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
             if (selectedIds.includes(user.id.toString()) && endpoint === 'block') {
                 handleLogout();
                 setRedirectToRegister(true);
@@ -69,6 +68,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
             setSelectAll(false);
         } catch (err) {
             console.error('Error updating users:', err);
+            alert(err.response?.data?.message || 'An error occurred');
         }
     };
 
@@ -76,12 +76,14 @@ const AdminPanel = ({ user, onLogout, token }) => {
         const selectedIds = getSelectedUserIds();
         if (selectedIds.length === 0) return;
 
+        const confirmDelete = window.confirm("Are you sure you want to delete these users? This action cannot be undone.");
+        if (!confirmDelete) return;
+
         try {
             await axios.delete('https://user-management-back-production-6bfb.up.railway.app/users/delete', {
                 data: { userIds: selectedIds },
                 headers: { Authorization: `Bearer ${token}` }
             });
-
             if (selectedIds.includes(user.id.toString())) {
                 handleLogout();
                 setRedirectToRegister(true);
@@ -93,6 +95,7 @@ const AdminPanel = ({ user, onLogout, token }) => {
             setSelectAll(false);
         } catch (err) {
             console.error('Error deleting users:', err);
+            alert(err.response?.data?.message || 'An error occurred');
         }
     };
 
